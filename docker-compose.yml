@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  plugin:
+    container_name: craft-livechat-plugin
+    build:
+      context: docker/php
+      args:
+        PHP_VERSION: 8.0
+    ports:
+      - "8081:80"
+    tty: true
+    volumes:
+      - .:/var/www/html
+
+  db:
+    container_name: craft-livechat-db
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    env_file:
+      - .env

@@ -1,0 +1,27 @@
+{% import "_includes/forms" as forms %}
+{% set title = "What'sRabbit LiveChat"|t('app') %}
+{% set fullPageForm = true %}
+
+{{ forms.autosuggestField({
+    label: 'API Key'|t('app'),
+    id: "api-key",
+    name: "apiKey",
+    suggestEnvVars: true,
+    suggestAliases: true,
+    value: settings.apiKey | default(''),
+    errors: settings.getErrors('apiKey'),
+    required: true,
+    size: 50
+}) }}
+
+{{ forms.autosuggestField({
+    label: 'API Secret'|t('app'),
+    id: "api-secret",
+    name: "apiSecret",
+    suggestEnvVars: true,
+    suggestAliases: true,
+    value: settings.apiSecret | default(''),
+    errors: settings.getErrors('apiSecret'),
+    required: true,
+    size: 50
+}) }}
