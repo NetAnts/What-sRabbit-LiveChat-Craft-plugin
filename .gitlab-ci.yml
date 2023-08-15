@@ -1,0 +1,262 @@
+variables:
+  # Docker config
+  DOCKER_HOST: "tcp://docker:2375/"
+  DOCKER_DRIVER: "overlay2"
+  DOCKER_VERSION: "23.0.1"
+  DOCKER_TLS_CERTDIR: ""
+
+  # Base containers
+  PHP_CI_IMAGE: "${CI_REGISTRY_IMAGE}/php"
+  PHP_CURRENT_VERSION: "8.2" # The most recent version
+
+
+default:
+  tags:
+    - docker
+    - netants-ci
+
+# -- CI templates --------------------------------------------------------------------------------------------------------------------------
+.build_image:
+  image: "cloudants/docker:${DOCKER_VERSION}"
+  services:
+    - name: "cloudants/docker:${DOCKER_VERSION}-dind"
+      alias: "docker"
+  before_script:
+    - docker login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
+
+.build_image_php:
+  extends:
+    - .build_image
+  script:
+    - docker build --pull --cache-from "${PHP_CI_IMAGE}:${PHP_VERSION}" --tag "${PHP_CI_IMAGE}:${PHP_VERSION}" --build-arg PHP_VERSION=${PHP_VERSION} docker/php
+    - docker push "${PHP_CI_IMAGE}:${PHP_VERSION}"
+
+.test_phpunit:
+  image: "${PHP_CI_IMAGE}:${PHP_VERSION}"
+  variables:
+    MYSQL_ROOT_PASSWORD: "test"
+    MYSQL_PASSWORD: "test"
+    MYSQL_USER: "test"
+    MYSQL_DATABASE: "test"
+  script:
+    - cp tests/.env.test tests/.env
+    - composer codecept
+  services:
+    - mysql:8.0
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: "./coverage/coverage.xml"
+
+
+# -- STAGE // Build base containers --------------------------------------------------------------------------------------------------------
+build-base:php-php8.0:
+  variables:
+    PHP_VERSION: '8.0'
+  extends:
+    - .build_image_php
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/**/*
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docker/**/*
+
+build-base:php-php8.1:
+  variables:
+    PHP_VERSION: '8.1'
+  extends:
+    - .build_image_php
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/**/*
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docker/**/*
+
+build-base:php-current:
+  variables:
+    PHP_VERSION: ${PHP_CURRENT_VERSION}
+  extends:
+    - .build_image_php
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/**/*
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docker/**/*
+
+
+# -- STAGE // Build dependencies -----------------------------------------------------------------------------------------------------------
+build:composer-php8.0:
+  variables:
+    PHP_VERSION: '8.0'
+  image: "${PHP_CI_IMAGE}:${PHP_VERSION}"
+  needs:
+    - job: build-base:php-php8.0
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - composer install --optimize-autoloader
+  artifacts:
+    paths:
+      - vendor
+
+build:composer-php8.1:
+  variables:
+    PHP_VERSION: '8.1'
+  image: "${PHP_CI_IMAGE}:${PHP_VERSION}"
+  needs:
+    - job: build-base:php-php8.1
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - composer install --optimize-autoloader
+  artifacts:
+    paths:
+      - vendor
+
+build:composer-php-current:
+  image: "${PHP_CI_IMAGE}:${PHP_CURRENT_VERSION}"
+  needs:
+    - job: build-base:php-current
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - composer install --optimize-autoloader
+  artifacts:
+    paths:
+      - vendor
+
+
+# -- STAGE // Testing ----------------------------------------------------------------------------------------------------------------------
+test:phpcs:
+  image: "${PHP_CI_IMAGE}:${PHP_CURRENT_VERSION}"
+  needs:
+    - job: build:composer-php-current
+      optional: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - src/**/*
+        - test/**/*
+  script:
+    - mkdir ./.coverage
+    - composer ci-phpcs
+  artifacts:
+    reports:
+      junit: "./.coverage/.phpcs-junit-report.xml"
+
+test:codeception-php8.0:
+  variables:
+    PHP_VERSION: '8.0'
+  extends:
+    - .test_phpunit
+  needs:
+    - job: build:composer-php8.0
+      optional: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - src/**/*
+        - test/**/*
+
+test:codeception-php8.1:
+  variables:
+    PHP_VERSION: '8.1'
+  extends:
+    - .test_phpunit
+  needs:
+    - job: build:composer-php8.1
+      optional: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - src/**/*
+        - test/**/*
+
+test:codeception-php-current:
+  variables:
+    PHP_VERSION: ${PHP_CURRENT_VERSION}
+  extends:
+    - .test_phpunit
+  needs:
+    - job: build:composer-php-current
+      optional: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - src/**/*
+        - test/**/*
+    - if: $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - src/**/*
+        - test/**/*
+
+
+# -- STAGE // Publish ----------------------------------------------------------------------------------------------------------------------
+publish:
+  image: curlimages/curl:latest
+  variables:
+    URL: "$CI_SERVER_PROTOCOL://$CI_SERVER_HOST:$CI_SERVER_PORT/api/v4/projects/$CI_PROJECT_ID/packages/composer?job_token=$CI_JOB_TOKEN"
+  needs:
+    - job: test:phpcs
+      optional: false
+    - job: test:codeception-php8.0
+      optional: false
+    - job: test:codeception-php8.1
+      optional: false
+    - job: test:codeception-php-current
+      optional: false
+  rules:
+    - if: $CI_COMMIT_TAG != null
+  script:
+    - version=$([[ -z "$CI_COMMIT_TAG" ]] && echo "branch=$CI_COMMIT_REF_NAME" || echo "tag=$CI_COMMIT_TAG")
+    - insecure=$([ "$CI_SERVER_PROTOCOL" = "http" ] && echo "--insecure" || echo "")
+    - response=$(curl -s -w "\n%{http_code}" $insecure --data $version $URL)
+    - code=$(echo "$response" | tail -n 1)
+    - body=$(echo "$response" | head -n 1)
+    - if [ $code -eq 201 ]; then
+      echo "Package created - Code $code - $body";
+      else
+      echo "Could not create package - Code $code - $body";
+      exit 1;
+      fi

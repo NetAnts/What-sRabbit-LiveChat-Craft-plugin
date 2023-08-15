@@ -1,0 +1,59 @@
+{
+    "name": "netants/whatsrabbit-live-chat",
+    "description": "This plugin provides a What'sRabbit LiveChat widget for your CraftCMS website",
+    "license": "MIT",
+    "type": "craft-plugin",
+    "authors": [
+        {
+            "name": "NetAnts",
+            "email": "info@netants.nl",
+            "homepage": "https://netants.nl"
+        }
+    ],
+    "require-dev": {
+        "mockery/mockery": "^1.6",
+        "phpunit/phpunit": "^9.6",
+        "php-mock/php-mock-mockery": "^1.4",
+        "codeception/codeception": "^5.0",
+        "vlucas/phpdotenv": "^5.5",
+        "codeception/module-yii2": "^1.1",
+        "codeception/module-asserts": "^3.0",
+        "squizlabs/php_codesniffer": "^3.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "NetAnts\\WhatsRabbitLiveChat\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NetAnts\\WhatsRabbitLiveChatTest\\": "tests/unit/"
+        }
+    },
+    "scripts": {
+        "codecept": "./vendor/bin/codecept run unit --coverage-xml",
+        "cs-check": "phpcs",
+        "ci-phpcs": "@cs-check --report=junit --report-file=./.coverage/.phpcs-junit-report.xml"
+    },
+    "extra": {
+        "name": "What'sRabbit LiveChat",
+        "handle": "whatsrabbit-live-chat"
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true
+        },
+        "gitlab-domains": ["gitlab.netants.nl"]
+    },
+    "require": {
+        "craftcms/cms": "^4.4",
+        "whatsrabbit/live-chat-plugin-core": "^0.0.2"
+    },
+    "repositories": {
+        "netants": {
+            "type": "composer",
+            "url": "https://gitlab.netants.nl/api/v4/group/116/-/packages/composer/"
+        }
+    }
+}

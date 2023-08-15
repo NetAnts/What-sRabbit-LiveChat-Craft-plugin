@@ -1,0 +1,73 @@
+{% extends '_layouts/cp' %}
+{% import "_includes/forms" as forms %}
+{% set title = "What'sRabbit LiveChat"|t('app') %}
+{% set fullPageForm = true %}
+{% set foundAsset = displaySettings.avatarAssetId ? craft.assets().id(displaySettings.avatarAssetId) : null %}
+{% set crumbs  = [
+    {
+        label: 'What\'sRabbit LiveChat'|t('whatsrabbit-live-chat'),
+        url: url('whatsrabbit-live-chat/display-settings/edit'),
+    },
+    {
+        label: 'Settings'|t('whatsrabbit-live-chat'),
+        url: url('whatsrabbit-live-chat/display-settings/edit'),
+    },
+]%}
+
+{% block mainFormAttributes -%}
+    {# We need this in order to submit the avatar #}
+    {{ parent() }} enctype="multipart/form-data"
+{%- endblock %}
+
+{% block content %}
+    {{ actionInput('whatsrabbit-live-chat/display-settings/save') }}
+    {{ forms.elementSelectField({
+        label: "Avatar",
+        id: "avatarAssetId",
+        name: "avatarAssetId",
+        viewMode: "list",
+        elementType: 'craft\\elements\\Asset',
+        required: true,
+        errors: displaySettings.getErrors('avatarAssetId'),
+        limit: 1,
+        elements: foundAsset ? foundAsset : [],
+        criteria: { kind: 'image'}
+    }) }}
+
+    {{ forms.textField({
+        label: 'Title'|t('app'),
+        id: 'title',
+        name: 'title',
+        value: displaySettings.title,
+        size: 50,
+        errors: displaySettings.getErrors('title'),
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: 'Description'|t('app'),
+        id: 'description',
+        name: 'description',
+        value: displaySettings.description,
+        errors: displaySettings.getErrors('description'),
+        size: 50,
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: 'WhatsApp URL'|t('app'),
+        id: 'whats-app-url',
+        name: 'whatsAppUrl',
+        value: displaySettings.whatsAppUrl,
+        errors: displaySettings.getErrors('whatsAppUrl'),
+        size: 50,
+        required: true,
+    }) }}
+
+    {{ forms.lightswitch({
+        label: 'Show livechat widget'|t('app'),
+        id: 'enabled',
+        name: 'enabled',
+        on: displaySettings.enabled,
+    }) }}
+{% endblock %}
