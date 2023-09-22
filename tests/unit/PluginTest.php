@@ -47,6 +47,7 @@ class PluginTest extends TestCase
 
     public function testInitAddsHtml(): void
     {
+        $this->plugin->isInstalled = true;
         $settingsService = Mockery::mock(SettingsService::class);
         $settingsService->expects('getSettings')->twice()->andReturn(LiveChatConfig::createFromRequest([
             'apiKey' => 'some-api-key',

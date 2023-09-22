@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NetAnts\WhatsRabbitLiveChat\Factory;
 
+use craft\helpers\App;
 use GuzzleHttp\Client;
 use NetAnts\WhatsRabbitLiveChat\Plugin;
 use NetAnts\WhatsRabbitLiveChat\Service\SettingsService;
@@ -18,8 +19,8 @@ class LiveChatServiceFactory
         $client = new Client(['http_errors' => false]);
 
         return new LiveChatService(
-            $settings['apiKey'],
-            $settings['apiSecret'],
+            App::parseEnv($settings['apiKey']),
+            App::parseEnv($settings['apiSecret']),
             $client,
             $settingsService->pluginRepoUrl
         );

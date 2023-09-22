@@ -33,44 +33,47 @@ class Plugin extends \craft\base\Plugin
     {
         $this->controllerNamespace = 'NetAnts\\WhatsRabbitLiveChat\\Controller';
 
-        /**
-         * Register control panel menu items
-         */
-        Event::on(
-            Cp::class,
-            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            [$this, 'addNavItem'],
-        );
-
-        /**
-         * Register api route
-         */
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
-            [$this, 'addRoute'],
-        );
-
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            [$this, 'addCpRoute'],
-        );
-
-        /**
-         * Register live chat hook and files
-         */
-
-        $pluginAssetsUrl = getenv('LIVECHAT_ASSETS_DOMAIN') ?: self::LIVECHAT_ASSETS_DOMAIN;
-
-        if ($this->service->getSettings()?->enabled && !Craft::$app->request->isCpRequest) {
-            Craft::$app->getView()->registerHtml($this->getLiveChatWidget());
-        }
-        Craft::$app->getView()->registerCssFile(sprintf('https://%s/styles.css', $pluginAssetsUrl));
-        Craft::$app->getView()->registerJsFile(sprintf('https://%s/polyfills.js', $pluginAssetsUrl));
-        Craft::$app->getView()->registerJsFile(sprintf('https://%s/main.js', $pluginAssetsUrl));
-
         parent::init();
+        if ($this->isInstalled) {
+
+            /**
+             * Register control panel menu items
+             */
+            Event::on(
+                Cp::class,
+                Cp::EVENT_REGISTER_CP_NAV_ITEMS,
+                [$this, 'addNavItem'],
+            );
+
+            /**
+             * Register api route
+             */
+            Event::on(
+                UrlManager::class,
+                UrlManager::EVENT_REGISTER_SITE_URL_RULES,
+                [$this, 'addRoute'],
+            );
+
+            Event::on(
+                UrlManager::class,
+                UrlManager::EVENT_REGISTER_CP_URL_RULES,
+                [$this, 'addCpRoute'],
+            );
+
+            /**
+             * Register live chat hook and files
+             */
+
+            $pluginAssetsUrl = getenv('LIVECHAT_ASSETS_DOMAIN') ?: self::LIVECHAT_ASSETS_DOMAIN;
+
+
+            if ($this->service->getSettings()?->enabled && !Craft::$app->request->isCpRequest) {
+                Craft::$app->getView()->registerHtml($this->getLiveChatWidget());
+            }
+            Craft::$app->getView()->registerCssFile(sprintf('https://%s/styles.css', $pluginAssetsUrl));
+            Craft::$app->getView()->registerJsFile(sprintf('https://%s/polyfills.js', $pluginAssetsUrl));
+            Craft::$app->getView()->registerJsFile(sprintf('https://%s/main.js', $pluginAssetsUrl));
+        }
     }
 
     public function addNavItem(RegisterCpNavItemsEvent $event): void

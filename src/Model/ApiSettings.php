@@ -8,7 +8,6 @@ class ApiSettings extends Model
 {
     public string $apiKey = '';
     public string $apiSecret = '';
-    public string $pluginRepositoryDomain = '';
 
     public function rules(): array
     {
