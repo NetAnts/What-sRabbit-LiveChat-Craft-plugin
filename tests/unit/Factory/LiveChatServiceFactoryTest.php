@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NetAnts\WhatsRabbitLiveChatTest\Factory;
 
+use craft\helpers\App;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use NetAnts\WhatsRabbitLiveChat\Factory\LiveChatServiceFactory;
