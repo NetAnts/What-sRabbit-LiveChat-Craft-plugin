@@ -73,18 +73,13 @@ class DisplaySettingsControllerTest extends TestCase
             'title' => 'Some title',
             'description' => 'Some description',
             'avatarAssetId' => ['some-avatar-id'],
-            'whatsAppUrl' => 'https://wa.me',
         ]);
-        $request->expects('getValidatedBodyParam')->andReturn(null);
-        $request->expects('getPathInfo')->andReturn('/api');
+        $request->expects('getAcceptsJson')->andReturnTrue();
+
         $this->controller->request = $request;
         $response = $this->controller->actionSave();
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertSame(302, $response->getStatusCode());
-        $this->assertSame(
-            'Something went wrong while creating configCould not create LiveChatConfig because the following data is missing "enabled"',
-            $this->craft::$app->session->getError()
-        );
+        $this->assertSame(400, $response->getStatusCode());
     }
 
     public function testActionSaveFails(): void

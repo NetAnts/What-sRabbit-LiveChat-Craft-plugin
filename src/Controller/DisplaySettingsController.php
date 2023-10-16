@@ -60,7 +60,7 @@ class DisplaySettingsController extends Controller
             'title' => $data['title'] ?? null,
             'description' => $data['description'] ?? null,
             'whatsAppUrl' => $data['whatsAppUrl'] ?? null,
-            'enabled' => (bool)($data['enabled'] ?? null),
+            'enabled' => (bool)($data['enabled'] ?? false),
         ]);
 
 

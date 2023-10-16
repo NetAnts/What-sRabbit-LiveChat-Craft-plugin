@@ -13,8 +13,7 @@ class LiveChatConfig
         'avatarAssetId',
         'title',
         'description',
-        'whatsAppUrl',
-        'enabled'
+        'whatsAppUrl'
     ];
 
     private function __construct(
